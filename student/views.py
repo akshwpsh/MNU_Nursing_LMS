@@ -54,6 +54,24 @@ def curriculum(request, subject_id, type_id):
                "objects": objects}
     return render(request, "student/list/list_layout.html", context)
 
+@login_required(redirect_field_name=None)
+def test(request, subject_id, type_id):
+    curriculum_objects = Post.objects.filter(postsubjectmapping__subject_id=subject_id, type_id=type_id) \
+        .order_by("created_date").all()
+    type_name = PostType.objects.get(id=type_id).name
+    subject_name = Subject.objects.get(id=subject_id).name
+    objects = []
+    for data in curriculum_objects:
+        status = False
+        if Post.objects.filter(child_post__parent_post=data, author=request.user).exists():
+            status = True
+        objects.append({
+            "object": data,
+            "status": status
+        })
+    context = {"subject_id": subject_id, "type_id": type_id, "subject_name": subject_name, "type_name": type_name,
+               "objects": objects}
+    return render(request, "student/assignment/assignment_modify.html", context)
 
 @login_required(redirect_field_name=None)
 def curriculum_detail(request, subject_id, type_id, curriculum_id):
